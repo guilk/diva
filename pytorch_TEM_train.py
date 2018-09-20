@@ -78,12 +78,12 @@ if __name__ == '__main__':
     train_dict, val_dict, test_dict = TEM_load_data.getDatasetDict()
 
     # small toy set for fast debugging
-    # toy_dict = {}
-    # for idx, (k,v) in enumerate(val_dict.iteritems()):
-    #     if idx > 200:
-    #         break
-    #     toy_dict[k] = v
-    # val_dict = toy_dict
+    toy_dict = {}
+    for idx, (k,v) in enumerate(val_dict.iteritems()):
+        if idx > 200:
+            break
+        toy_dict[k] = v
+    val_dict = toy_dict
 
     val_data_dict = TEM_load_data.getFullData(train_dict, val_dict, test_dict, "val")
     train_data_dict=TEM_load_data.getFullData(train_dict, val_dict, test_dict, "train")

@@ -164,6 +164,9 @@ def getFullData(train_dict,val_dict,test_dict, dataSet):
         
         gt_start_bboxs=np.stack((gt_xmins-gt_len_small/2,gt_xmins+gt_len_small/2),axis=1)
         gt_end_bboxs=np.stack((gt_xmaxs-gt_len_small/2,gt_xmaxs+gt_len_small/2),axis=1)
+        print gt_start_bboxs, gt_end_bboxs
+        print gt_lens, gt_len_small
+        assert False
         
         match_score_action=[]
         for jdx in range(len(anchor_xmin)):
