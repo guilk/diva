@@ -39,7 +39,7 @@ def generateProposals(video_name,video_dict):
     tgap = 1./tscale
     peak_thres=0.5
 
-    tdf=pandas.read_csv("./output/TEM_results/"+video_name+".csv")
+    tdf=pandas.read_csv("../../output/TEM_results/"+video_name+".csv")
     start_scores=tdf.start.values[:]
     end_scores=tdf.end.values[:]
     
@@ -118,7 +118,7 @@ def generateProposals(video_name,video_dict):
         new_df["match_ioa"]=new_ioa_list
     except:
         pass
-    new_df.to_csv("./output/PGM_proposals/"+video_name+".csv",index=False)
+    new_df.to_csv("../../output/PGM_proposals/"+video_name+".csv",index=False)
     
 parser = argparse.ArgumentParser(description="Boundary Sensitive Network")
 parser.add_argument('start_idx', type=int)

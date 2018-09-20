@@ -29,6 +29,11 @@ def getDatasetDict():
         video_new_info["feature_frame"]=video_info['feature_frame']
         video_subset=df.subset.values[i]
         video_new_info['annotations']=video_info['annotations']
+
+        # print video_info['duration_frame'],video_info['duration_second'],video_info['feature_frame'],\
+        #     video_info['annotations'],df.video.values[i],df.subset.values[i]
+        # assert False
+
         if video_subset=="training":
             train_dict[video_name]=video_new_info
         elif video_subset=="validation":
@@ -94,16 +99,16 @@ def getBatchData(video_list,data_dict):
     batch_anchor_feature=np.reshape(batch_anchor_feature,[len(video_list),tscale,-1])
     return batch_label_action,batch_label_start,batch_label_end,batch_anchor_feature
     
-def getFullData(dataSet):
+def getFullData(train_dict,val_dict,test_dict, dataSet):
     """Load full data in dataset
     """
-    train_dict,val_dict,test_dict=getDatasetDict()
+    # train_dict,val_dict,test_dict=getDatasetDict()
     if dataSet=="train":
         video_dict=train_dict
     else:
         video_dict=val_dict
     video_list=video_dict.keys()
-        
+
     batch_bbox=[]
     batch_index=[0]
     batch_anchor_xmin=[]
@@ -117,6 +122,7 @@ def getFullData(dataSet):
         video_frame=video_info['duration_frame']
         video_second=video_info['duration_second']
         feature_frame=video_info['feature_frame']
+
         corrected_second=float(feature_frame)/video_frame*video_second
         video_labels=video_info['annotations']
         for j in range(len(video_labels)):
@@ -126,14 +132,20 @@ def getFullData(dataSet):
             tmp_start=max(min(1,tmp_start/corrected_second),0)
             tmp_end=max(min(1,tmp_end/corrected_second),0)
             batch_bbox.append([tmp_start,tmp_end])
+            # print tmp_start,tmp_end
         
         tmp_anchor_xmin=[tgap*i for i in range(tscale)]
         tmp_anchor_xmax=[tgap*i for i in range(1,tscale+1)]
+        # print tmp_anchor_xmin, tmp_anchor_xmax
         batch_anchor_xmin.append(list(tmp_anchor_xmin))    
         batch_anchor_xmax.append(list(tmp_anchor_xmax)) 
         batch_index.append(batch_index[-1]+len(video_labels))
-        tmp_df=pd.read_csv("./data/activitynet_feature_cuhk/csv_mean_"+str(tscale)+"/"+video_name+".csv")
+        # tmp_df=pd.read_csv("./data/activitynet_feature_cuhk/csv_mean_"+str(tscale)+"/"+video_name+".csv")
+        tmp_df = pd.read_csv("../../datasets/csv_mean_" + str(tscale) + "/" + video_name + ".csv")
+
         batch_anchor_feature.append(tmp_df.values[:,:])
+        # assert False
+    # assert False
     num_data=len(batch_anchor_feature)
     batch_label_action=[]
     batch_label_start=[]
@@ -162,6 +174,9 @@ def getFullData(dataSet):
         match_score_end=[]
         for jdx in range(len(anchor_xmin)):
             match_score_end.append(np.max(ioa_with_anchors(anchor_xmin[jdx],anchor_xmax[jdx],gt_end_bboxs[:,0],gt_end_bboxs[:,1])))
+
+        # print match_score_action, match_score_start, match_score_end
+        # assert False
     
         batch_label_action.append(match_score_action)
         batch_label_start.append(match_score_start)
@@ -182,7 +197,8 @@ def getProposalDataTest(video_list,video_dict):
         tmp_anchor_xmax=[tgap*i for i in range(1,tscale+1)]
         batch_anchor_xmin.append(list(tmp_anchor_xmin))    
         batch_anchor_xmax.append(list(tmp_anchor_xmax)) 
-        tmp_df=pd.read_csv("./data/activitynet_feature_cuhk/csv_mean_"+str(tscale)+"/"+video_name+".csv")
+        # tmp_df=pd.read_csv("./data/activitynet_feature_cuhk/csv_mean_"+str(tscale)+"/"+video_name+".csv")
+        tmp_df = pd.read_csv("../../datasets/csv_mean_" + str(tscale) + "/" + video_name + ".csv")
         batch_anchor_feature.append(tmp_df.values[:,:])
     batch_anchor_xmin=np.array(batch_anchor_xmin)
     batch_anchor_xmax=np.array(batch_anchor_xmax)

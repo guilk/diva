@@ -2,6 +2,12 @@
 import tensorflow as tf
 import numpy as np
 import PEM_load_data
+import os
+import cPickle
+
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
+
 
 def abs_smooth(x):
     """Smoothed absolute function. Useful to compute an L1 smooth error.
@@ -25,12 +31,14 @@ def PEM_loss(anchors_iou,match_iou,config):
     r_m= config.u_ratio_m * num_h/(num_m)
     r_m=tf.minimum(r_m,1)
     u_smmask=tf.random_uniform([tf.shape(u_hmask)[0]],dtype=tf.float32)
+    tmp_u_smmask = u_smmask
     u_smmask=u_smmask*u_mmask
     u_smmask=tf.cast(u_smmask > (1. - r_m), dtype=tf.float32)
 
     r_l= config.u_ratio_l * num_h/(num_l)
     r_l=tf.minimum(r_l,1)
     u_slmask=tf.random_uniform([tf.shape(u_hmask)[0]],dtype=tf.float32)
+    tmp_u_slmask = u_slmask
     u_slmask=u_slmask*u_lmask
     u_slmask=tf.cast(u_slmask > (1. - r_l), dtype=tf.float32)
 
@@ -41,6 +49,10 @@ def PEM_loss(anchors_iou,match_iou,config):
 
     num_iou=[tf.reduce_sum(u_hmask),tf.reduce_sum(u_smmask),tf.reduce_sum(u_slmask)]
     loss={'iou_loss':iou_loss,'num_iou':num_iou}
+    loss['anchors_iou'] = anchors_iou
+    loss['match_iou'] = match_iou
+    loss['u_smmask'] = tmp_u_smmask
+    loss['u_slmask'] = tmp_u_slmask
     return loss
 
 def PEM_Train(X,Y_iou,LR,config):
@@ -104,6 +116,7 @@ if __name__ == "__main__":
 
     train_dict,val_dict,test_dict=PEM_load_data.getDatasetDict()
 
+
     train_data=PEM_load_data.getTrainData(config.batch_size,"train")
     val_data=PEM_load_data.getTrainData(config.batch_size,"validation")
 
@@ -124,6 +137,9 @@ if __name__ == "__main__":
                                                               LR:config.learning_rates[epoch]})
             mini_info["iou_loss"].append(out_loss["iou_loss"])
             mini_info["l2"].append(out_loss["l2"])
+
+            with open('../../loss_test/pem/{}.pkl'.format(idx), 'wb') as output_file:
+                cPickle.dump(out_loss, output_file)
 
         train_info["iou_loss"].append(np.mean(mini_info["iou_loss"]))
         train_info["l2"].append(np.mean(mini_info["l2"]))

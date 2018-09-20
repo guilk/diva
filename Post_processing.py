@@ -114,7 +114,7 @@ result_dict={}
 for i in range(len(video_list)):
     video_name=video_list[i]
 
-    df=pd.read_csv("./output/PEM_results/"+video_name+".csv")
+    df=pd.read_csv("../../output/PEM_results/"+video_name+".csv")
 
     df['score']=df.iou_score.values[:]*df.xmin_score.values[:]*df.xmax_score.values[:]
     if len(df)>1:
@@ -135,7 +135,7 @@ for i in range(len(video_list)):
 
 
 output_dict={"version":"VERSION 1.3","results":result_dict,"external_data":{}}
-outfile=open("./output/result_proposal.json","w")
+outfile=open("../../output/result_proposal.json","w")
 json.dump(output_dict,outfile)
 outfile.close()
 

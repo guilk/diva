@@ -34,14 +34,14 @@ def generateFeature(video_name,video_dict):
     num_sample_action=16
     num_sample_interpld = 3
 
-    adf=pandas.read_csv("./output/TEM_results/"+video_name+".csv")
+    adf=pandas.read_csv("../../output/TEM_results/"+video_name+".csv")
     score_action=adf.action.values[:]
     seg_xmins = adf.xmin.values[:]
     seg_xmaxs = adf.xmax.values[:]
     video_scale = len(adf)
     video_gap = seg_xmaxs[0] - seg_xmins[0]
     video_extend = video_scale / 4 + 10
-    pdf=pandas.read_csv("./output/PGM_proposals/"+video_name+".csv")
+    pdf=pandas.read_csv("../../output/PGM_proposals/"+video_name+".csv")
     
     video_subset = video_dict[video_name]['subset']
     if video_subset == "training":
@@ -86,7 +86,7 @@ def generateFeature(video_name,video_dict):
         tmp_feature = numpy.concatenate([tmp_y_new_action,tmp_y_new_start,tmp_y_new_end])
         feature_bsp.append(tmp_feature)
     feature_bsp = numpy.array(feature_bsp)
-    numpy.save("./output/PGM_feature/"+video_name,feature_bsp)
+    numpy.save("../../output/PGM_feature/"+video_name,feature_bsp)
 
 parser = argparse.ArgumentParser(description="Boundary Sensitive Network")
 parser.add_argument('start_idx', type=int)

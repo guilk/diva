@@ -39,7 +39,8 @@ if __name__ == "__main__":
     tf_config.log_device_placement =True
     sess=tf.InteractiveSession(config=tf_config)
     tf.global_variables_initializer().run()  
-    model_saver.restore(sess,"models/TEM/tem_model_best")  
+    # model_saver.restore(sess,"models/TEM/tem_model_best")
+    model_saver.restore(sess, "models/TEM/tem_model_checkpoint")
 
     video_dict= TEM_load_data.load_json("./data/activitynet_annotations/anet_anno_action.json")
 
@@ -78,4 +79,4 @@ if __name__ == "__main__":
             tmp_xmax=b_xmax[j]
             tmp_result=np.stack((tmp_action,tmp_start,tmp_end,tmp_xmin,tmp_xmax),axis=1)
             tmp_df=pd.DataFrame(tmp_result,columns=columns)  
-            tmp_df.to_csv("./output/TEM_results/"+tmp_video+".csv",index=False)
+            tmp_df.to_csv("../../output/TEM_results/"+tmp_video+".csv",index=False)

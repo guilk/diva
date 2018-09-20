@@ -2,10 +2,12 @@
 import tensorflow as tf
 import numpy as np
 import TEM_load_data
+import cPickle
 
 def binary_logistic_loss(gt_scores,pred_anchors):
     """Calculate weighted binary logistic loss 
-    """ 
+    """
+
     gt_scores = tf.reshape(gt_scores,[-1])
     pred_anchors = tf.reshape(pred_anchors,[-1])
     
@@ -24,8 +26,12 @@ def binary_logistic_loss(gt_scores,pred_anchors):
 def TEM_loss(anchors_action,anchors_start,anchors_end,
                   Y_action,Y_start,Y_end,config):
     """Calculateloss for action, start and end saparetely
-    """  
+    """
+
     loss_action,num_sample_action = binary_logistic_loss(Y_action,anchors_action)
+    # print Y_action
+    # print anchors_action
+    # print loss_action
     loss_start,num_sample_start = binary_logistic_loss(Y_start,anchors_start)
     loss_end,num_sample_end = binary_logistic_loss(Y_end,anchors_end)
 
@@ -42,6 +48,7 @@ def TEM_Train(X_feature,Y_action,Y_start,Y_end,LR,config):
     net=tf.layers.conv1d(inputs=net,filters=512,kernel_size=3,strides=1,padding='same',activation=tf.nn.relu)
     net=0.1*tf.layers.conv1d(inputs=net,filters=3,kernel_size=1,strides=1,padding='same')
     net=tf.nn.sigmoid(net)
+    # assert False
 
     anchors_action = net[:,:,0]
     anchors_start = net[:,:,1]
@@ -54,6 +61,8 @@ def TEM_Train(X_feature,Y_action,Y_start,Y_end,LR,config):
     cost = 2*loss["loss_action"]+loss["loss_start"]+loss["loss_end"]+l2
     loss['l2'] = l2
     loss['cost'] = cost
+    loss['anchors_action'] = anchors_action
+    loss['Y_action'] = Y_action
     optimizer=tf.train.AdamOptimizer(learning_rate=LR).minimize(cost,var_list=TEM_trainable_variables)
     
     return optimizer,loss,TEM_trainable_variables
@@ -86,8 +95,12 @@ if __name__ == "__main__":
     tf.global_variables_initializer().run()  
 
     train_dict,val_dict,test_dict=TEM_load_data.getDatasetDict()
-    train_data_dict=TEM_load_data.getFullData("train")
-    val_data_dict = TEM_load_data.getFullData("val")
+    val_data_dict = TEM_load_data.getFullData(train_dict,val_dict,test_dict, "val")
+    train_data_dict=TEM_load_data.getFullData(train_dict,val_dict,test_dict, "train")
+
+
+    # print val_data_dict
+    # assert False
 
     train_info={"cost":[],"loss_action":[],"loss_start":[],"loss_end":[],"l2":[]}
     val_info={"cost":[],"loss_action":[],"loss_start":[],"loss_end":[],"l2":[]}
@@ -105,7 +118,10 @@ if __name__ == "__main__":
                                                               Y_action:batch_label_action,
                                                               Y_start:batch_label_start,
                                                               Y_end:batch_label_end,
-                                                              LR:config.learning_rates[epoch]})  
+                                                              LR:config.learning_rates[epoch]})
+            with open('../../loss_test/tem/{}.pkl'.format(idx), 'wb') as output_file:
+                cPickle.dump(out_loss, output_file)
+
             for key in info_keys:
                 mini_info[key].append(out_loss[key])
         for key in info_keys:
@@ -134,4 +150,5 @@ if __name__ == "__main__":
         if val_info["cost"][-1]<best_val_cost:
             best_val_cost = val_info["cost"][-1]
             model_saver.save(sess,"models/TEM/tem_model_best")
+
         

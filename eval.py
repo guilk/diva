@@ -7,6 +7,8 @@ Created on Tue May 23 14:21:39 2017
 import sys
 sys.path.append('./Evaluation')
 from eval_proposal import ANETproposal
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -30,7 +32,7 @@ def run_evaluation(ground_truth_filename, proposal_filename,
 def plot_metric(average_nr_proposals, average_recall, recall, tiou_thresholds=np.linspace(0.5, 0.95, 10)):
 
     fn_size = 14
-    plt.figure(num=None, figsize=(12, 8))
+    fig = plt.figure(num=None, figsize=(12, 8))
     ax = plt.subplot(1,1,1)
     
     colors = ['k', 'r', 'yellow', 'b', 'c', 'm', 'b', 'pink', 'lawngreen', 'indigo']
@@ -56,10 +58,12 @@ def plot_metric(average_nr_proposals, average_recall, recall, tiou_thresholds=np
     plt.ylim([0, 1.0])
     plt.setp(plt.axes().get_xticklabels(), fontsize=fn_size)
     plt.setp(plt.axes().get_yticklabels(), fontsize=fn_size)
-    plt.show()
+
+    fig.savefig('./pytorch_reproduce_result.png')
+    # plt.show()
 
 
-eval_file="./output/result_proposal.json"
+eval_file="../../output/result_proposal.json"
 
 uniform_average_nr_proposals_valid, uniform_average_recall_valid, uniform_recall_valid = run_evaluation(
     "./Evaluation/data/activity_net_1_3_new.json",

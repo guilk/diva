@@ -61,9 +61,9 @@ def prop_dict_data(prop_dict):
 def getProposalData(video_dict,video_list):
     prop_dict={}
     for video_name in video_list:
-        pdf=pandas.read_csv("./output/PGM_proposals/"+video_name+".csv")
+        pdf=pandas.read_csv("../../output/PGM_proposals/"+video_name+".csv")
         pdf=pdf[:500]
-        tmp_feature = numpy.load("./output/PGM_feature/" + video_name+".npy")
+        tmp_feature = numpy.load("../../output/PGM_feature/" + video_name+".npy")
         tmp_feature = tmp_feature[:500]
         tmp_dict={"match_iou":pdf.match_iou.values[:],"match_ioa":pdf.match_ioa.values[:],
                   "xmin":pdf.xmin.values[:],"xmax":pdf.xmax.values[:],
@@ -72,9 +72,9 @@ def getProposalData(video_dict,video_list):
     return prop_dict
             
 def getProposalDataTest(video_dict,video_name):
-    pdf=pandas.read_csv("./output/PGM_proposals/"+video_name+".csv")
+    pdf=pandas.read_csv("../../output/PGM_proposals/"+video_name+".csv")
     pdf=pdf[:1000]
-    tmp_feature = numpy.load("./output/PGM_feature/" + video_name+".npy")
+    tmp_feature = numpy.load("../../output/PGM_feature/" + video_name+".npy")
     tmp_feature = tmp_feature[:1000]
     prop_dict={"match_iou":pdf.xmin.values[:],"match_ioa":pdf.xmin.values[:],
                   "xmin":pdf.xmin.values[:],"xmax":pdf.xmax.values[:],"xmin_score":pdf.xmin_score.values[:],"xmax_score":pdf.xmax_score.values[:],

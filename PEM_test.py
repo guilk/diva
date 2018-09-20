@@ -50,7 +50,8 @@ if __name__ == "__main__":
     tf_config.log_device_placement =True
     sess=tf.InteractiveSession(config=tf_config)
     tf.global_variables_initializer().run()  
-    model_saver.restore(sess,"models/PEM/pem_model_best")  
+    # model_saver.restore(sess,"models/PEM/pem_model_best")
+    model_saver.restore(sess, "models/PEM/pem_model_checkpoint")
 
     train_dict,val_dict,test_dict=PEM_load_data.getDatasetDict()
 
@@ -77,5 +78,5 @@ if __name__ == "__main__":
         latentDf["iou_score"]=out_score
         
         
-        latentDf.to_csv("./output/PEM_results/"+video_name+".csv",index=False)
+        latentDf.to_csv("../../output/PEM_results/"+video_name+".csv",index=False)
 

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 nohup python PGM_proposal_generation.py 0 2500 &
 nohup python PGM_proposal_generation.py 2500 5000 &
 nohup python PGM_proposal_generation.py 5000 7500 &
@@ -6,5 +7,4 @@ nohup python PGM_proposal_generation.py 10000 12500 &
 nohup python PGM_proposal_generation.py 12500 15000 &
 nohup python PGM_proposal_generation.py 15000 17500 &
 nohup python PGM_proposal_generation.py 17500 20000 &
-
-
+echo "please wait for proposal generation"
