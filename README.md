@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # BSN-boundary-sensitive-network
 
 This repo holds the codes of paper: "BSN: Boundary Sensitive Network for Temporal Action Proposal Generation", which is accepted in ECCV 2018.
@@ -140,3 +141,6 @@ For any question, please file an issue or contact
 Tianwei Lin: wzmsltw@sjtu.edu.cn
 ```
 
+=======
+# diva
+>>>>>>> e8f33d652ff0ab246db44ee08b183a572de63abf
