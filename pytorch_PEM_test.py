@@ -7,7 +7,8 @@ import torch
 from PEM_model import PEM
 import argparse
 import torch.optim as optim
-import PEM_load_data
+# import PEM_load_data
+import pytorch_PEM_load_data as PEM_load_data
 import numpy as np
 import pandas as pd
 
@@ -89,8 +90,10 @@ if __name__ == '__main__':
     pem.load_state_dict(torch.load(model_path))
     pem.cuda()
 
-    train_dict, val_dict, test_dict = PEM_load_data.getDatasetDict()
-    FullDict = PEM_load_data.getTestData("validation")
+    gt_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/gt_annotations.pkl'
+    split_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/split.pkl'
+    train_dict, val_dict, test_dict = PEM_load_data.getDatasetDict(gt_path, split_path)
+    FullDict = PEM_load_data.getTestData(train_dict, val_dict, test_dict, "validation")
     batch_video_list = PEM_load_data.getBatchList(val_dict, batch_size)
     video_list = val_dict.keys()
     for idx in range(len(video_list)):

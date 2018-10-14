@@ -4,7 +4,8 @@ import torch.optim as optim
 from torch.autograd import Variable
 import torch.nn as nn
 from TEM_model import TEM
-import TEM_load_data
+# import TEM_load_data
+import pytorch_TEM_load_data as TEM_load_data
 import argparse
 import numpy as np
 
@@ -55,7 +56,7 @@ def parse_arguments():
     parser.add_argument('--lr', type=float, default=0.01, help='learning rate for Critic, default=0.00005')
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
     parser.add_argument('--niter', type=int, default=20, help='number of epochs to train for')
-    parser.add_argument('--batchSize', type=int, default=16, help='input batch size')
+    parser.add_argument('--batchSize', type=int, default=8, help='input batch size')
     parser.add_argument('--experiment', default=None, help='Where to store samples and models')
     opt = parser.parse_args()
     return opt
@@ -75,24 +76,26 @@ if __name__ == '__main__':
     optimizer = optim.Adam(tem.parameters(), lr = 0.001, betas=(opt.beta1, 0.999), weight_decay = 0.001)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
-    train_dict, val_dict, test_dict = TEM_load_data.getDatasetDict()
+    gt_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/gt_annotations.pkl'
+    split_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/split.pkl'
+    train_dict, val_dict, test_dict = TEM_load_data.getDatasetDict(gt_path, split_path)
 
-    # small toy set for fast debugging
-    toy_dict = {}
-    for idx, (k,v) in enumerate(val_dict.iteritems()):
-        if idx > 200:
-            break
-        toy_dict[k] = v
-    val_dict = toy_dict
-
-    val_data_dict = TEM_load_data.getFullData(train_dict, val_dict, test_dict, "val")
-    train_data_dict=TEM_load_data.getFullData(train_dict, val_dict, test_dict, "train")
+    # # small toy set for fast debugging
+    # toy_dict = {}
+    # for idx, (k,v) in enumerate(val_dict.iteritems()):
+    #     if idx > 200:
+    #         break
+    #     toy_dict[k] = v
+    #
+    # val_dict = toy_dict
+    rgb_features = TEM_load_data.load_whole_features()
+    train_data_dict = TEM_load_data.getFullData(train_dict, val_dict, test_dict, "train", rgb_features)
+    val_data_dict = TEM_load_data.getFullData(train_dict, val_dict, test_dict, "val", rgb_features)
 
     train_info={"loss":[],"loss_action":[],"loss_start":[],"loss_end":[]}
     val_info={"loss":[],"loss_action":[],"loss_start":[],"loss_end":[]}
     info_keys=train_info.keys()
     best_val_cost = 1000000
-
 
     for epoch in range(num_epoches):
         '''
@@ -115,6 +118,7 @@ if __name__ == '__main__':
             #     TEM_load_data.getBatchData(batch_video_list[idx],val_data_dict)
 
             batch_anchor_feature = np.transpose(batch_anchor_feature, (0, 2, 1))
+            # batch_size, num_timesteps, feat_dim => batch_size, feat_dim, num_timesteps
 
             X_feature = torch.FloatTensor(batch_anchor_feature).cuda()
             Y_action = torch.FloatTensor(batch_label_action).cuda()
@@ -144,7 +148,6 @@ if __name__ == '__main__':
         for idx in range(len(batch_video_list)):
             batch_label_action,batch_label_start,batch_label_end,batch_anchor_feature=\
                 TEM_load_data.getBatchData(batch_video_list[idx],val_data_dict)
-
             batch_anchor_feature = np.transpose(batch_anchor_feature, (0, 2, 1))
             X_feature = torch.FloatTensor(batch_anchor_feature).cuda()
             Y_action = torch.FloatTensor(batch_label_action).cuda()
@@ -169,43 +172,3 @@ if __name__ == '__main__':
         if val_info['loss'][-1] < best_val_cost:
             best_val_cost = val_info['loss'][-1]
             torch.save(tem.state_dict(), '{}/TEM/tem_model_best.pth'.format(opt.experiment))
-
-
-
-    #
-    # data_root = '../../loss_test/tem'
-    # loss_files = os.listdir(data_root)
-    #
-    # for loss_file in loss_files:
-    #     file_path = os.path.join(data_root, loss_file)
-    #     with open(file_path, 'rb') as input_file:
-    #         loss_dict = cPickle.load(input_file)
-    #
-    #     anchors_action = loss_dict['anchors_action']
-    #     Y_action = loss_dict['Y_action']
-    #     loss_action = loss_dict['loss_action']
-    #     num_sample_action = loss_dict['num_sample_action']
-    #
-    #     print anchors_action.shape
-    #     print Y_action.shape
-    #     assert False
-    #
-    #     anchors_action = torch.FloatTensor(anchors_action).cuda()
-    #     Y_action = torch.FloatTensor(Y_action).cuda()
-    #     # anchors_action = torch.from_numpy(anchors_action)
-    #     # Y_action = torch.from_numpy(Y_action)
-    #
-    #     loss, num_samples = binary_logistic_loss(Y_action, anchors_action)
-    #     # print type(loss)
-    #     # print loss.is_cuda
-    #     cpu_loss = loss.cpu().numpy()
-    #     print cpu_loss, loss_action
-    #     assert (cpu_loss - loss_action) < 0.0001
-    #     # print loss.cpu().numpy(),loss_action
-    #
-    #     # print type(anchors_action)
-    #     # print type(Y_action)
-    #     # print anchors_action.is_cuda
-    #     # print Y_action.is_cuda
-    #     # assert False
-

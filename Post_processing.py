@@ -2,35 +2,58 @@
 import numpy as np
 import pandas as pd
 import json
+import cPickle as pickle
+len_window = 300
 
 def load_json(file):
     with open(file) as json_file:
         data = json.load(json_file)
         return data
 
-def getDatasetDict():
-    df=pd.read_csv("./data/activitynet_annotations/video_info_new.csv")
-    json_data= load_json("./data/activitynet_annotations/anet_anno_action.json")
-    database=json_data
-    train_dict={}
-    val_dict={}
-    test_dict={}
-    for i in range(len(df)):
-        video_name=df.video.values[i]
-        video_info=database[video_name]
-        video_new_info={}
-        video_new_info['duration_frame']=video_info['duration_frame']
-        video_new_info['duration_second']=video_info['duration_second']
-        video_new_info["feature_frame"]=video_info['feature_frame']
-        video_subset=df.subset.values[i]
-        video_new_info['annotations']=video_info['annotations']
-        if video_subset=="training":
-            train_dict[video_name]=video_new_info
-        elif video_subset=="validation":
-            val_dict[video_name]=video_new_info
-        elif video_subset=="testing":
-            test_dict[video_name]=video_new_info
-    return train_dict,val_dict,test_dict
+# def getDatasetDict():
+#     df=pd.read_csv("./data/activitynet_annotations/video_info_new.csv")
+#     json_data= load_json("./data/activitynet_annotations/anet_anno_action.json")
+#     database=json_data
+#     train_dict={}
+#     val_dict={}
+#     test_dict={}
+#     for i in range(len(df)):
+#         video_name=df.video.values[i]
+#         video_info=database[video_name]
+#         video_new_info={}
+#         video_new_info['duration_frame']=video_info['duration_frame']
+#         video_new_info['duration_second']=video_info['duration_second']
+#         video_new_info["feature_frame"]=video_info['feature_frame']
+#         video_subset=df.subset.values[i]
+#         video_new_info['annotations']=video_info['annotations']
+#         if video_subset=="training":
+#             train_dict[video_name]=video_new_info
+#         elif video_subset=="validation":
+#             val_dict[video_name]=video_new_info
+#         elif video_subset=="testing":
+#             test_dict[video_name]=video_new_info
+#     return train_dict,val_dict,test_dict
+
+def getDatasetDict(gt_path, split_path):
+    with open(gt_path, 'rb') as input_file:
+        database = pickle.load(input_file)
+    with open(split_path, 'rb') as input_file:
+        db_splits = pickle.load(input_file)
+    train_dict = {}
+    val_dict = {}
+    test_dict = {}
+
+    for snippet_name in database:
+        snippet_info = database[snippet_name]
+        # {'annotations': [(2974, 3147, u'Unloading')], 'frame_inds': (3000, 3299)}
+        video_name = snippet_name.split('-')[0]
+        if video_name in db_splits['train']:
+            train_dict[snippet_name] = snippet_info
+        elif video_name in db_splits['val']:
+            val_dict[snippet_name] = snippet_info
+        elif video_name in db_splits['ts']:
+            test_dict[snippet_name] = snippet_info
+    return train_dict, val_dict, test_dict
 
 def IOU(s1,e1,s2,e2):
     if (s2>e1) or (s1>e2):
@@ -108,34 +131,42 @@ def min_max(x):
     x=(x-min(x))/(max(x)-min(x))
     return x
 
-train_dict,val_dict,test_dict=getDatasetDict()
-video_list=val_dict.keys()
-result_dict={}
-for i in range(len(video_list)):
-    video_name=video_list[i]
+if __name__ == '__main__':
+    gt_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/gt_annotations.pkl'
+    split_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/split.pkl'
 
-    df=pd.read_csv("../../output/PEM_results/"+video_name+".csv")
+    train_dict,val_dict,test_dict=getDatasetDict(gt_path, split_path)
+    video_list=val_dict.keys()
+    result_dict={}
+    for i in range(len(video_list)):
+        video_name=video_list[i]
 
-    df['score']=df.iou_score.values[:]*df.xmin_score.values[:]*df.xmax_score.values[:]
-    if len(df)>1:
-        df=Soft_NMS(df)
-    
-    df=df.sort_values(by="score",ascending=False)
-    video_info=val_dict[video_name]
-    video_duration=float(video_info["duration_frame"]/16*16)/video_info["duration_frame"]*video_info["duration_second"]
-    print video_duration, video_info["duration_second"]
-    proposal_list=[]
+        df=pd.read_csv("../../output/PEM_results/"+video_name+".csv")
 
-    for j in range(min(100,len(df))):
-        tmp_proposal={}
-        tmp_proposal["score"]=df.score.values[j]
-        tmp_proposal["segment"]=[max(0,df.xmin.values[j])*video_duration,min(1,df.xmax.values[j])*video_duration]
-        proposal_list.append(tmp_proposal)
-    result_dict[video_name[2:]]=proposal_list
+        df['score']=df.iou_score.values[:]*df.xmin_score.values[:]*df.xmax_score.values[:]
+        if len(df)>1:
+            df=Soft_NMS(df)
+
+        df=df.sort_values(by="score",ascending=False)
+        video_info=val_dict[video_name]
 
 
-output_dict={"version":"VERSION 1.3","results":result_dict,"external_data":{}}
-outfile=open("../../output/result_proposal.json","w")
-json.dump(output_dict,outfile)
-outfile.close()
+        # video_duration=float(video_info["duration_frame"]/16*16)/video_info["duration_frame"]*video_info["duration_second"]
+        # print video_duration, video_info["duration_second"]
+
+        video_duration = video_info['frame_inds'][1] - video_info['frame_inds'][0]
+        proposal_list=[]
+
+        for j in range(min(100,len(df))):
+            tmp_proposal={}
+            tmp_proposal["score"]=df.score.values[j]
+            tmp_proposal["segment"]=[max(0,df.xmin.values[j])*video_duration,min(1,df.xmax.values[j])*video_duration]
+            proposal_list.append(tmp_proposal)
+        # result_dict[video_name[2:]]=proposal_list
+        result_dict[video_name]=proposal_list
+
+    output_dict={"version":"VERSION 1.3","results":result_dict,"external_data":{}}
+    outfile=open("../../output/result_proposal.json","w")
+    json.dump(output_dict,outfile)
+    outfile.close()
 

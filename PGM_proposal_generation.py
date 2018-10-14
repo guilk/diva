@@ -3,7 +3,8 @@ import json
 import numpy
 import pandas
 import argparse
-
+import cPickle as pickle
+len_window = 300
 
 def load_json(file):
     with open(file) as json_file:
@@ -94,17 +95,21 @@ def generateProposals(video_name,video_dict):
     new_df=new_df.sort_values(by="score",ascending=False)
     
     video_info=video_dict[video_name]
-    video_frame=video_info['duration_frame']
-    video_second=video_info['duration_second']
-    feature_frame=video_info['feature_frame']
-    corrected_second=float(feature_frame)/video_frame*video_second
-    
+    # video_frame=video_info['duration_frame']
+    # video_second=video_info['duration_second']
+    # feature_frame=video_info['feature_frame']
+    # corrected_second=float(feature_frame)/video_frame*video_second
+    frame_inds = video_info['frame_inds']
+    start_frame = frame_inds[0]
     try:
         gt_xmins=[]
         gt_xmaxs=[]
         for idx in range(len(video_info["annotations"])):
-            gt_xmins.append(video_info["annotations"][idx]["segment"][0]/corrected_second)
-            gt_xmaxs.append(video_info["annotations"][idx]["segment"][1]/corrected_second)
+            tmp_info = video_info['annotations'][idx]
+            # gt_xmins.append(video_info["annotations"][idx]["segment"][0]/corrected_second)
+            # gt_xmaxs.append(video_info["annotations"][idx]["segment"][1]/corrected_second)
+            gt_xmins.append(1.0 * (tmp_info[0] - start_frame)/len_window)
+            gt_xmaxs.append(1.0 * (tmp_info[1] - start_frame)/len_window)
         new_iou_list=[]
         for j in range(len(new_df)):
             tmp_new_iou=max(iou_with_anchors(new_df.xmin.values[j],new_df.xmax.values[j],gt_xmins,gt_xmaxs))
@@ -121,12 +126,18 @@ def generateProposals(video_name,video_dict):
     new_df.to_csv("../../output/PGM_proposals/"+video_name+".csv",index=False)
     
 parser = argparse.ArgumentParser(description="Boundary Sensitive Network")
-parser.add_argument('start_idx', type=int)
-parser.add_argument('end_idx', type=int)
+# parser.add_argument('start_idx', type=int)
+# parser.add_argument('end_idx', type=int)
 args = parser.parse_args()
-video_dict= load_json("./data/activitynet_annotations/anet_anno_action.json")
-result_dict={}
-video_list=video_dict.keys()[args.start_idx:args.end_idx]
 
-for video_name in video_list:
+gt_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/gt_annotations.pkl'
+with open(gt_path, 'rb') as input_file:
+    video_dict = pickle.load(input_file)
+
+# video_dict= load_json("./data/activitynet_annotations/anet_anno_action.json")
+result_dict={}
+# video_list=video_dict.keys()[args.start_idx:args.end_idx]
+video_list = video_dict.keys()
+for idx, video_name in enumerate(video_list):
+    print 'Process {}th video: {}'.format(idx, video_name)
     generateProposals(video_name,video_dict)

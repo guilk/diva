@@ -59,14 +59,20 @@ def plot_metric(average_nr_proposals, average_recall, recall, tiou_thresholds=np
     plt.setp(plt.axes().get_xticklabels(), fontsize=fn_size)
     plt.setp(plt.axes().get_yticklabels(), fontsize=fn_size)
 
-    fig.savefig('./pytorch_reproduce_result.png')
+    fig.savefig('./result.png')
     # plt.show()
 
 
 eval_file="../../output/result_proposal.json"
 
+# uniform_average_nr_proposals_valid, uniform_average_recall_valid, uniform_recall_valid = run_evaluation(
+#     "./Evaluation/data/activity_net_1_3_new.json",
+#     eval_file,
+#     max_avg_nr_proposals=100,
+#     tiou_thresholds=np.linspace(0.5, 0.95, 10),
+#     subset='validation')
 uniform_average_nr_proposals_valid, uniform_average_recall_valid, uniform_recall_valid = run_evaluation(
-    "./Evaluation/data/activity_net_1_3_new.json",
+    "./Evaluation/data/virat_stride100_interval_300.json",
     eval_file,
     max_avg_nr_proposals=100,
     tiou_thresholds=np.linspace(0.5, 0.95, 10),

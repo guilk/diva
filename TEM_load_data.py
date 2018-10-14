@@ -27,12 +27,9 @@ def getDatasetDict():
         video_new_info['duration_frame']=video_info['duration_frame']
         video_new_info['duration_second']=video_info['duration_second']
         video_new_info["feature_frame"]=video_info['feature_frame']
+
         video_subset=df.subset.values[i]
         video_new_info['annotations']=video_info['annotations']
-
-        # print video_info['duration_frame'],video_info['duration_second'],video_info['feature_frame'],\
-        #     video_info['annotations'],df.video.values[i],df.subset.values[i]
-        # assert False
 
         if video_subset=="training":
             train_dict[video_name]=video_new_info
@@ -102,7 +99,6 @@ def getBatchData(video_list,data_dict):
 def getFullData(train_dict,val_dict,test_dict, dataSet):
     """Load full data in dataset
     """
-    # train_dict,val_dict,test_dict=getDatasetDict()
     if dataSet=="train":
         video_dict=train_dict
     else:
@@ -125,6 +121,7 @@ def getFullData(train_dict,val_dict,test_dict, dataSet):
 
         corrected_second=float(feature_frame)/video_frame*video_second
         video_labels=video_info['annotations']
+        # print len(video_labels)
         for j in range(len(video_labels)):
             tmp_info=video_labels[j]
             tmp_start=tmp_info['segment'][0]
@@ -132,8 +129,8 @@ def getFullData(train_dict,val_dict,test_dict, dataSet):
             tmp_start=max(min(1,tmp_start/corrected_second),0)
             tmp_end=max(min(1,tmp_end/corrected_second),0)
             batch_bbox.append([tmp_start,tmp_end])
-            # print tmp_start,tmp_end
-        
+            # print tmp_start*corrected_second,tmp_end*corrected_second, corrected_second
+
         tmp_anchor_xmin=[tgap*i for i in range(tscale)]
         tmp_anchor_xmax=[tgap*i for i in range(1,tscale+1)]
         # print tmp_anchor_xmin, tmp_anchor_xmax
@@ -144,8 +141,6 @@ def getFullData(train_dict,val_dict,test_dict, dataSet):
         tmp_df = pd.read_csv("../../datasets/csv_mean_" + str(tscale) + "/" + video_name + ".csv")
 
         batch_anchor_feature.append(tmp_df.values[:,:])
-        # assert False
-    # assert False
     num_data=len(batch_anchor_feature)
     batch_label_action=[]
     batch_label_start=[]
@@ -153,7 +148,6 @@ def getFullData(train_dict,val_dict,test_dict, dataSet):
     
     for idx in range(num_data):
         gt_bbox=np.array(batch_bbox[batch_index[idx]:batch_index[idx+1]])
-        #break
         gt_xmins=gt_bbox[:,0]
         gt_xmaxs=gt_bbox[:,1]
         anchor_xmin=batch_anchor_xmin[idx]
@@ -164,9 +158,6 @@ def getFullData(train_dict,val_dict,test_dict, dataSet):
         
         gt_start_bboxs=np.stack((gt_xmins-gt_len_small/2,gt_xmins+gt_len_small/2),axis=1)
         gt_end_bboxs=np.stack((gt_xmaxs-gt_len_small/2,gt_xmaxs+gt_len_small/2),axis=1)
-        print gt_start_bboxs, gt_end_bboxs
-        print gt_lens, gt_len_small
-        assert False
         
         match_score_action=[]
         for jdx in range(len(anchor_xmin)):
@@ -177,9 +168,6 @@ def getFullData(train_dict,val_dict,test_dict, dataSet):
         match_score_end=[]
         for jdx in range(len(anchor_xmin)):
             match_score_end.append(np.max(ioa_with_anchors(anchor_xmin[jdx],anchor_xmax[jdx],gt_end_bboxs[:,0],gt_end_bboxs[:,1])))
-
-        # print match_score_action, match_score_start, match_score_end
-        # assert False
     
         batch_label_action.append(match_score_action)
         batch_label_start.append(match_score_start)

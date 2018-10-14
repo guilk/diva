@@ -11,7 +11,7 @@ class TEM(nn.Module):
         batchNormalization = False
         tem = nn.Sequential()
         tem.add_module('conv1d{0}'.format(0),
-                       nn.Conv1d(in_channels=400, out_channels=512, kernel_size=3, stride=1, padding=1))
+                       nn.Conv1d(in_channels=1024, out_channels=512, kernel_size=3, stride=1, padding=1))
         tem.add_module('relu{0}'.format(0), nn.ReLU(True))
 
         tem.add_module('conv1d{0}'.format(1),

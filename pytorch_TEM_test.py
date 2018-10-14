@@ -10,6 +10,8 @@ import argparse
 import torch.optim as optim
 import numpy as np
 import TEM_load_data
+import pytorch_TEM_load_data as TEM_load_data
+import cPickle as pickle
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -30,7 +32,11 @@ if __name__ == '__main__':
     if opt.experiment == None:
         opt.experiment = './pytorch_models'
 
-    video_dict = TEM_load_data.load_json("./data/activitynet_annotations/anet_anno_action.json")
+    # video_dict = TEM_load_data.load_json("./data/activitynet_annotations/anet_anno_action.json")
+    gt_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/gt_annotations.pkl'
+    with open(gt_path, 'rb') as input_file:
+        video_dict = pickle.load(input_file)
+    feat_dict = TEM_load_data.load_whole_features()
 
     batch_result_action = []
     batch_result_start = []
@@ -48,7 +54,7 @@ if __name__ == '__main__':
     for idx in range(len(batch_video_list)):
         print 'Process {}th of {} batch'.format(idx, len(batch_video_list))
         batch_anchor_xmin,batch_anchor_xmax,batch_anchor_feature=\
-            TEM_load_data.getProposalDataTest(batch_video_list[idx],video_dict)
+            TEM_load_data.getProposalDataTest(batch_video_list[idx],feat_dict)
         batch_anchor_feature = np.transpose(batch_anchor_feature, (0, 2, 1))
         X_feature = torch.FloatTensor(batch_anchor_feature).cuda()
         anchors = tem(X_feature)

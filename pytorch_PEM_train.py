@@ -7,7 +7,8 @@ import torch
 from PEM_model import PEM
 import argparse
 import torch.optim as optim
-import PEM_load_data
+# import PEM_load_data
+import pytorch_PEM_load_data as PEM_load_data
 import numpy as np
 
 
@@ -89,9 +90,12 @@ if __name__ == '__main__':
     optimizer = optim.Adam(pem.parameters(), lr = 0.001, betas=(opt.beta1, 0.999), weight_decay = 0.0001)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
-    train_dict, val_dict, test_dict = PEM_load_data.getDatasetDict()
-    train_data = PEM_load_data.getTrainData(batch_size, "train")
-    val_data = PEM_load_data.getTrainData(batch_size, "validation")
+    gt_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/gt_annotations.pkl'
+    split_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/split.pkl'
+
+    train_dict, val_dict, test_dict = PEM_load_data.getDatasetDict(gt_path, split_path)
+    train_data = PEM_load_data.getTrainData(train_dict, val_dict, test_dict, batch_size, "train")
+    val_data = PEM_load_data.getTrainData(train_dict, val_dict, test_dict, batch_size, "validation")
 
     train_info = {'iou_loss' : [], 'l2' : []}
     val_info = {'iou_loss':[], 'l2':[]}
