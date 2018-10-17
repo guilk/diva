@@ -52,12 +52,17 @@ def run_tem(tem_model, X_feature, Y_action, Y_start, Y_end):
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cuda', action='store_true', help='enables cuda')
-    parser.add_argument('--lr', type=float, default=0.01, help='learning rate for Critic, default=0.00005')
+    # parser.add_argument('--cuda', action='store_true', help='enables cuda')
+    parser.add_argument('--lr', type=float, default=0.001, help='learning rate for Critic, default=0.00005')
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
     parser.add_argument('--niter', type=int, default=20, help='number of epochs to train for')
-    parser.add_argument('--batchSize', type=int, default=8, help='input batch size')
+    parser.add_argument('--batchsize', type=int, default=8, help='input batch size')
+    parser.add_argument('--embedsize', type=int, default=64, help='embedding size of input feature')
+    parser.add_argument('--hiddensize', type=int, default=128, help='hidden size of network')
     parser.add_argument('--experiment', default=None, help='Where to store samples and models')
+    parser.add_argument('--stepsize', type=int, default=10, help='the step size of learning rate schedule')
+    parser.add_argument('--gamma', type=int, default=0.1, help = 'learning rate decay gamma')
+    parser.add_argument('--experiment', type=int, default=0.1, help='learning rate decay gamma')
     opt = parser.parse_args()
     return opt
 
@@ -68,12 +73,18 @@ if __name__ == '__main__':
     batch_size = opt.batchSize
     if opt.experiment == None:
         opt.experiment = './pytorch_models'
+    else:
+        opt.experiment = os.path.join('./pytorch_models', opt.experiment)
+
+
+    # experiment_root = './pytorch_models/lr_{}_niter_{}_batchsize_{}_embedsize_{}_hiddensize_{}_stepsize_{}_gamma_{}'\
+    #     .format(opt.lr, opt.niter, opt.batchsize, opt.embedsize, opt.hiddensize, opt.stepsize, opt.gamma)
 
     # Intialize model
     tem = TEM()
     tem.cuda()
 
-    optimizer = optim.Adam(tem.parameters(), lr = 0.001, betas=(opt.beta1, 0.999), weight_decay = 0.001)
+    optimizer = optim.Adam(tem.parameters(), lr = opt.lr, betas=(opt.beta1, 0.999), weight_decay = 0.001)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
     gt_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/gt_annotations.pkl'

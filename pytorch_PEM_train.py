@@ -70,9 +70,9 @@ def parse_arguments():
     parser.add_argument('--cuda', action='store_true', help='enables cuda')
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate for Critic, default=0.00005')
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
-    parser.add_argument('--niter', type=int, default=20, help='number of epochs to train for')
+    parser.add_argument('--niter', type=int, default=30, help='number of epochs to train for')
     parser.add_argument('--batchSize', type=int, default=16, help='input batch size')
-    parser.add_argument('--experiment', default=None, help='Where to store samples and models')
+    parser.add_argument('--experiment', default=None, help='which folder to store samples and models')
     opt = parser.parse_args()
     return opt
 
@@ -83,6 +83,11 @@ if __name__ == '__main__':
     num_epoches = opt.niter
     if opt.experiment == None:
         opt.experiment = './pytorch_models'
+        experiment_type = ''
+    else:
+        experiment_type = opt.experiment
+        opt.experiment = os.path.join('./pytorch_models', opt.experiment)
+
 
     pem = PEM()
     pem.cuda()

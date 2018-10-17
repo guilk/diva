@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import json
 import cPickle as pickle
+import argparse
+import os
 len_window = 300
 
 def load_json(file):
@@ -131,7 +133,15 @@ def min_max(x):
     x=(x-min(x))/(max(x)-min(x))
     return x
 
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--experiment', default=None, help='which folder to store samples and models')
+    opt = parser.parse_args()
+    return opt
+
 if __name__ == '__main__':
+    opt = parse_arguments()
+
     gt_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/gt_annotations.pkl'
     split_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/split.pkl'
 
@@ -141,7 +151,8 @@ if __name__ == '__main__':
     for i in range(len(video_list)):
         video_name=video_list[i]
 
-        df=pd.read_csv("../../output/PEM_results/"+video_name+".csv")
+        # df=pd.read_csv("../../output/PEM_results/"+video_name+".csv")
+        df=pd.read_csv(os.path.join('../../output', opt.experiment, 'PEM_results/{}.csv'.format(video_name)))
 
         df['score']=df.iou_score.values[:]*df.xmin_score.values[:]*df.xmax_score.values[:]
         if len(df)>1:
@@ -166,7 +177,8 @@ if __name__ == '__main__':
         result_dict[video_name]=proposal_list
 
     output_dict={"version":"VERSION 1.3","results":result_dict,"external_data":{}}
-    outfile=open("../../output/result_proposal.json","w")
+    # outfile=open("../../output/result_proposal.json","w")
+    outfile=open(os.path.join('../../output/', opt.experiment, 'result_proposal.json'),"w")
     json.dump(output_dict,outfile)
     outfile.close()
 

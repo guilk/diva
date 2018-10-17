@@ -11,6 +11,8 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
+import argparse
+import os
 
 def run_evaluation(ground_truth_filename, proposal_filename, 
                    max_avg_nr_proposals=100, 
@@ -61,27 +63,34 @@ def plot_metric(average_nr_proposals, average_recall, recall, tiou_thresholds=np
 
     fig.savefig('./result.png')
     # plt.show()
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--experiment', type=int, default=0.1, help='learning rate decay gamma')
+    opt = parser.parse_args()
+    return opt
 
+if __name__ == '__main__':
+    opt = parse_arguments()
+    # eval_file="../../output/result_proposal.json"
+    eval_file=os.path.join('../../output', opt.experiment, 'result_proposal.json')
 
-eval_file="../../output/result_proposal.json"
+    # uniform_average_nr_proposals_valid, uniform_average_recall_valid, uniform_recall_valid = run_evaluation(
+    #     "./Evaluation/data/activity_net_1_3_new.json",
+    #     eval_file,
+    #     max_avg_nr_proposals=100,
+    #     tiou_thresholds=np.linspace(0.5, 0.95, 10),
+    #     subset='validation')
+    uniform_average_nr_proposals_valid, uniform_average_recall_valid, uniform_recall_valid = run_evaluation(
+        "./Evaluation/data/virat_stride100_interval_300.json",
+        eval_file,
+        max_avg_nr_proposals=100,
+        tiou_thresholds=np.linspace(0.5, 0.95, 10),
+        subset='validation')
 
-# uniform_average_nr_proposals_valid, uniform_average_recall_valid, uniform_recall_valid = run_evaluation(
-#     "./Evaluation/data/activity_net_1_3_new.json",
-#     eval_file,
-#     max_avg_nr_proposals=100,
-#     tiou_thresholds=np.linspace(0.5, 0.95, 10),
-#     subset='validation')
-uniform_average_nr_proposals_valid, uniform_average_recall_valid, uniform_recall_valid = run_evaluation(
-    "./Evaluation/data/virat_stride100_interval_300.json",
-    eval_file,
-    max_avg_nr_proposals=100,
-    tiou_thresholds=np.linspace(0.5, 0.95, 10),
-    subset='validation')
+    plot_metric(uniform_average_nr_proposals_valid, uniform_average_recall_valid, uniform_recall_valid)
 
-plot_metric(uniform_average_nr_proposals_valid, uniform_average_recall_valid, uniform_recall_valid)
-
-#mean_100=np.mean(uniform_recall_valid[:,-1])
-print "AR@1 is \t",np.mean(uniform_recall_valid[:,0])
-print "AR@5 is \t",np.mean(uniform_recall_valid[:,4])
-print "AR@10 is \t",np.mean(uniform_recall_valid[:,9])
-print "AR@100 is \t",np.mean(uniform_recall_valid[:,-1])
+    #mean_100=np.mean(uniform_recall_valid[:,-1])
+    print "AR@1 is \t",np.mean(uniform_recall_valid[:,0])
+    print "AR@5 is \t",np.mean(uniform_recall_valid[:,4])
+    print "AR@10 is \t",np.mean(uniform_recall_valid[:,9])
+    print "AR@100 is \t",np.mean(uniform_recall_valid[:,-1])

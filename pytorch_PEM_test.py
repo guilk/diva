@@ -83,7 +83,12 @@ if __name__ == '__main__':
     batch_size = opt.batchSize
     num_epoches = opt.niter
     if opt.experiment == None:
+        experiment_type = ''
         opt.experiment = './pytorch_models'
+    else:
+        experiment_type = opt.experiment
+        opt.experiment = os.path.join('./pytorch_models', opt.experiment)
+
 
     pem = PEM()
     model_path = os.path.join(opt.experiment, 'PEM/pem_model_best.pth')
@@ -93,7 +98,7 @@ if __name__ == '__main__':
     gt_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/gt_annotations.pkl'
     split_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/split.pkl'
     train_dict, val_dict, test_dict = PEM_load_data.getDatasetDict(gt_path, split_path)
-    FullDict = PEM_load_data.getTestData(train_dict, val_dict, test_dict, "validation")
+    FullDict = PEM_load_data.getTestData(train_dict, val_dict, test_dict, "validation", experiment_type)
     batch_video_list = PEM_load_data.getBatchList(val_dict, batch_size)
     video_list = val_dict.keys()
     for idx in range(len(video_list)):
@@ -117,4 +122,6 @@ if __name__ == '__main__':
         latentDf["xmax_score"] = xmax_score_list
         latentDf["iou_score"] = iou_score
 
-        latentDf.to_csv("../../output/PEM_results/" + video_name + ".csv", index=False)
+        # latentDf.to_csv("../../output/PEM_results/" + video_name + ".csv", index=False)
+        latentDf.to_csv(os.path.join('../../output', experiment_type, 'PEM_results/{}.csv'.format(video_name)),
+                        index=False)

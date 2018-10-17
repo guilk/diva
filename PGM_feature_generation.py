@@ -5,6 +5,7 @@ import argparse
 import numpy
 import json
 import cPickle as pickle
+import os
 
 def load_json(file):
     with open(file) as json_file:
@@ -50,22 +51,26 @@ def getDatasetDict(gt_path, split_path):
         video_dict[snippet_name] = video_new_info
     return video_dict
 
-def generateFeature(video_name,video_dict):
+def generateFeature(video_name, video_dict, experiment_type):
 
     num_sample_start=8
     num_sample_end=8
     num_sample_action=16
     num_sample_interpld = 3
 
-    adf=pandas.read_csv("../../output/TEM_results/"+video_name+".csv")
+    src_path = os.path.join('../../output', experiment_type, 'TEM_results/{}.csv'.format(video_name))
+    # adf=pandas.read_csv("../../output/TEM_results/"+video_name+".csv")
+    adf=pandas.read_csv(src_path)
     score_action=adf.action.values[:]
     seg_xmins = adf.xmin.values[:]
     seg_xmaxs = adf.xmax.values[:]
     video_scale = len(adf)
     video_gap = seg_xmaxs[0] - seg_xmins[0]
     video_extend = video_scale / 4 + 10
-    pdf=pandas.read_csv("../../output/PGM_proposals/"+video_name+".csv")
-    
+    src_path = os.path.join('../../output', experiment_type, 'PGM_proposals/{}.csv'.format(video_name))
+    # pdf=pandas.read_csv("../../output/PGM_proposals/"+video_name+".csv")
+    pdf=pandas.read_csv(src_path)
+
     video_subset = video_dict[video_name]['subset']
     if video_subset == "train":
         pdf=pdf[:500]
@@ -109,21 +114,28 @@ def generateFeature(video_name,video_dict):
         tmp_feature = numpy.concatenate([tmp_y_new_action,tmp_y_new_start,tmp_y_new_end])
         feature_bsp.append(tmp_feature)
     feature_bsp = numpy.array(feature_bsp)
-    numpy.save("../../output/PGM_feature/"+video_name,feature_bsp)
+    dst_path = os.path.join('../../output', experiment_type, 'PGM_feature/{}'.format(video_name))
+    # numpy.save("../../output/PGM_feature/"+video_name,feature_bsp)
+    numpy.save(dst_path,feature_bsp)
 
-parser = argparse.ArgumentParser(description="Boundary Sensitive Network")
-# parser.add_argument('start_idx', type=int)
-# parser.add_argument('end_idx', type=int)
-args = parser.parse_args()
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Boundary Sensitive Network")
+    parser.add_argument('--experiment', default=None, help='Which folder to store samples and models')
+    # parser.add_argument('start_idx', type=int)
+    # parser.add_argument('end_idx', type=int)
+    args = parser.parse_args()
 
-gt_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/gt_annotations.pkl'
-split_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/split.pkl'
+if __name__ == '__main__':
+    opt = parse_arguments()
 
-video_dict=getDatasetDict(gt_path, split_path)
-# video_list=video_dict.keys()[args.start_idx:args.end_idx]
-video_list=video_dict.keys()
+    gt_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/gt_annotations.pkl'
+    split_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/split.pkl'
 
-for idx, video_name in enumerate(video_list):
-    print 'Process {}th video: {}'.format(idx, video_name)
-    generateFeature(video_name,video_dict)
-    #break
+    video_dict=getDatasetDict(gt_path, split_path)
+    # video_list=video_dict.keys()[args.start_idx:args.end_idx]
+    video_list=video_dict.keys()
+
+    for idx, video_name in enumerate(video_list):
+        print 'Process {}th video: {}'.format(idx, video_name)
+        generateFeature(video_name,video_dict, opt.experiment)
+        #break

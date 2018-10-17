@@ -4,6 +4,7 @@ import pandas
 import numpy
 import json
 import cPickle as pickle
+import os
 
 
 def load_json(file):
@@ -86,12 +87,15 @@ def prop_dict_data(prop_dict):
     return batch_feature, batch_iou_list, batch_ioa_list
 
 
-def getProposalData(video_dict, video_list):
+def getProposalData(video_dict, video_list, experiment_type):
     prop_dict = {}
     for video_name in video_list:
-        pdf = pandas.read_csv("../../output/PGM_proposals/" + video_name + ".csv")
+
+        # pdf = pandas.read_csv("../../output/PGM_proposals/" + video_name + ".csv")
+        pdf = pandas.read_csv(os.path.join('../../output', experiment_type, 'PGM_proposals/{}.csv'.format(video_name)))
         pdf = pdf[:500]
-        tmp_feature = numpy.load("../../output/PGM_feature/" + video_name + ".npy")
+        # tmp_feature = numpy.load("../../output/PGM_feature/" + video_name + ".npy")
+        tmp_feature = numpy.load(os.path.join('../../output', experiment_type, 'PGM_features/{}.csv'.format(video_name)))
         tmp_feature = tmp_feature[:500]
         tmp_dict = {"match_iou": pdf.match_iou.values[:], "match_ioa": pdf.match_ioa.values[:],
                     "xmin": pdf.xmin.values[:], "xmax": pdf.xmax.values[:],
@@ -100,10 +104,12 @@ def getProposalData(video_dict, video_list):
     return prop_dict
 
 
-def getProposalDataTest(video_dict, video_name):
-    pdf = pandas.read_csv("../../output/PGM_proposals/" + video_name + ".csv")
+def getProposalDataTest(video_dict, video_name, experiment_type):
+    # pdf = pandas.read_csv("../../output/PGM_proposals/" + video_name + ".csv")
+    pdf = pandas.read_csv(os.path.join('../../output', experiment_type, 'PGM_proposals/{}.csv'.format(video_name)))
     pdf = pdf[:1000]
-    tmp_feature = numpy.load("../../output/PGM_feature/" + video_name + ".npy")
+    # tmp_feature = numpy.load("../../output/PGM_feature/" + video_name + ".npy")
+    tmp_feature = numpy.load(os.path.join('../../output', experiment_type, 'PGM_feature/{}.csv'.format(video_name)))
     tmp_feature = tmp_feature[:1000]
     prop_dict = {"match_iou": pdf.xmin.values[:], "match_ioa": pdf.xmin.values[:],
                  "xmin": pdf.xmin.values[:], "xmax": pdf.xmax.values[:], "xmin_score": pdf.xmin_score.values[:],
@@ -112,7 +118,7 @@ def getProposalDataTest(video_dict, video_name):
     return prop_dict, video_name
 
 
-def getTestData(train_dict, val_dict, test_dict, dataSet):
+def getTestData(train_dict, val_dict, test_dict, dataSet, experiment_type):
     # train_dict, val_dict, test_dict = getDatasetDict()
     if dataSet == "test":
         video_dict = test_dict
@@ -126,12 +132,12 @@ def getTestData(train_dict, val_dict, test_dict, dataSet):
         if i % 100 == 0:
             print "%d / %d videos in %s set is loaded" % (i, len(video_list), dataSet)
         i += 1
-        prop_dict, video_name = getProposalDataTest(video_dict, video_name)
+        prop_dict, video_name = getProposalDataTest(video_dict, video_name, experiment_type)
         FullData[video_name] = prop_dict
     return FullData
 
 
-def getTrainData(train_dict, val_dict, test_dict, batch_size, dataSet):
+def getTrainData(train_dict, val_dict, test_dict, batch_size, dataSet, experiment_type):
     # train_dict, val_dict, test_dict = getDatasetDict()
     if dataSet == "validation":
         video_dict = val_dict
@@ -145,7 +151,7 @@ def getTrainData(train_dict, val_dict, test_dict, batch_size, dataSet):
         if i % 10 == 0:
             print "%d / %d batch_data in %s set is loaded" % (i, len(batch_video_list), dataSet)
         i += 1
-        FullData.append(getProposalData(video_dict, video_list))
+        FullData.append(getProposalData(video_dict, video_list, experiment_type))
     return FullData
 
 
