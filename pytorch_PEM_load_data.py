@@ -95,7 +95,7 @@ def getProposalData(video_dict, video_list, experiment_type):
         pdf = pandas.read_csv(os.path.join('../../output', experiment_type, 'PGM_proposals/{}.csv'.format(video_name)))
         pdf = pdf[:500]
         # tmp_feature = numpy.load("../../output/PGM_feature/" + video_name + ".npy")
-        tmp_feature = numpy.load(os.path.join('../../output', experiment_type, 'PGM_features/{}.csv'.format(video_name)))
+        tmp_feature = numpy.load(os.path.join('../../output', experiment_type, 'PGM_features/{}.npy'.format(video_name)))
         tmp_feature = tmp_feature[:500]
         tmp_dict = {"match_iou": pdf.match_iou.values[:], "match_ioa": pdf.match_ioa.values[:],
                     "xmin": pdf.xmin.values[:], "xmax": pdf.xmax.values[:],
@@ -104,13 +104,19 @@ def getProposalData(video_dict, video_list, experiment_type):
     return prop_dict
 
 
-def getProposalDataTest(video_dict, video_name, experiment_type):
+def getProposalDataTest(video_dict, video_name, experiment_type, dataSet):
     # pdf = pandas.read_csv("../../output/PGM_proposals/" + video_name + ".csv")
     pdf = pandas.read_csv(os.path.join('../../output', experiment_type, 'PGM_proposals/{}.csv'.format(video_name)))
-    pdf = pdf[:1000]
+    if dataSet == 'train':
+        pdf = pdf[:500]
+    else:
+        pdf = pdf[:1000]
     # tmp_feature = numpy.load("../../output/PGM_feature/" + video_name + ".npy")
-    tmp_feature = numpy.load(os.path.join('../../output', experiment_type, 'PGM_feature/{}.csv'.format(video_name)))
-    tmp_feature = tmp_feature[:1000]
+    tmp_feature = numpy.load(os.path.join('../../output', experiment_type, 'PGM_features/{}.npy'.format(video_name)))
+    if dataSet == 'train':
+        tmp_feature = tmp_feature[:500]
+    else:
+        tmp_feature = tmp_feature[:1000]
     prop_dict = {"match_iou": pdf.xmin.values[:], "match_ioa": pdf.xmin.values[:],
                  "xmin": pdf.xmin.values[:], "xmax": pdf.xmax.values[:], "xmin_score": pdf.xmin_score.values[:],
                  "xmax_score": pdf.xmax_score.values[:],
@@ -120,10 +126,17 @@ def getProposalDataTest(video_dict, video_name, experiment_type):
 
 def getTestData(train_dict, val_dict, test_dict, dataSet, experiment_type):
     # train_dict, val_dict, test_dict = getDatasetDict()
-    if dataSet == "test":
-        video_dict = test_dict
-    else:
+
+    if dataSet == 'train':
+        video_dict = train_dict
+    elif dataSet == 'validation':
         video_dict = val_dict
+    else:
+        video_dict = test_dict
+    # if dataSet == "test":
+    #     video_dict = test_dict
+    # else:
+    #     video_dict = val_dict
     video_list = video_dict.keys()  # [:500]
 
     FullData = {}
@@ -132,7 +145,7 @@ def getTestData(train_dict, val_dict, test_dict, dataSet, experiment_type):
         if i % 100 == 0:
             print "%d / %d videos in %s set is loaded" % (i, len(video_list), dataSet)
         i += 1
-        prop_dict, video_name = getProposalDataTest(video_dict, video_name, experiment_type)
+        prop_dict, video_name = getProposalDataTest(video_dict, video_name, experiment_type, dataSet)
         FullData[video_name] = prop_dict
     return FullData
 

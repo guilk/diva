@@ -136,6 +136,7 @@ def min_max(x):
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment', default=None, help='which folder to store samples and models')
+    parser.add_argument('--splittype', default=None, help='split type (train, validation, test)')
     opt = parser.parse_args()
     return opt
 
@@ -146,7 +147,15 @@ if __name__ == '__main__':
     split_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/split.pkl'
 
     train_dict,val_dict,test_dict=getDatasetDict(gt_path, split_path)
-    video_list=val_dict.keys()
+    if opt.splittype == 'train':
+        video_dict = train_dict
+    elif opt.splittype == 'validation':
+        video_dict = val_dict
+    else:
+        video_dict = test_dict
+
+    # video_list=val_dict.keys()
+    video_list=video_dict.keys()
     result_dict={}
     for i in range(len(video_list)):
         video_name=video_list[i]
@@ -159,7 +168,8 @@ if __name__ == '__main__':
             df=Soft_NMS(df)
 
         df=df.sort_values(by="score",ascending=False)
-        video_info=val_dict[video_name]
+        # video_info=val_dict[video_name]
+        video_info=video_dict[video_name]
 
 
         # video_duration=float(video_info["duration_frame"]/16*16)/video_info["duration_frame"]*video_info["duration_second"]
@@ -178,7 +188,7 @@ if __name__ == '__main__':
 
     output_dict={"version":"VERSION 1.3","results":result_dict,"external_data":{}}
     # outfile=open("../../output/result_proposal.json","w")
-    outfile=open(os.path.join('../../output/', opt.experiment, 'result_proposal.json'),"w")
+    outfile=open(os.path.join('../../output/', opt.experiment, '{}_result_proposal.json'.format(opt.splittype)),"w")
     json.dump(output_dict,outfile)
     outfile.close()
 

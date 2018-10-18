@@ -53,7 +53,7 @@ def run_tem(tem_model, X_feature, Y_action, Y_start, Y_end):
 def parse_arguments():
     parser = argparse.ArgumentParser()
     # parser.add_argument('--cuda', action='store_true', help='enables cuda')
-    parser.add_argument('--lr', type=float, default=0.001, help='learning rate for Critic, default=0.00005')
+    parser.add_argument('--lr', type=float, default=0.0001, help='learning rate for Critic, default=0.00005')
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
     parser.add_argument('--niter', type=int, default=20, help='number of epochs to train for')
     parser.add_argument('--batchsize', type=int, default=8, help='input batch size')
@@ -61,8 +61,7 @@ def parse_arguments():
     parser.add_argument('--hiddensize', type=int, default=128, help='hidden size of network')
     parser.add_argument('--experiment', default=None, help='Where to store samples and models')
     parser.add_argument('--stepsize', type=int, default=10, help='the step size of learning rate schedule')
-    parser.add_argument('--gamma', type=int, default=0.1, help = 'learning rate decay gamma')
-    parser.add_argument('--experiment', type=int, default=0.1, help='learning rate decay gamma')
+    parser.add_argument('--gamma', type=float, default=0.1, help = 'learning rate decay gamma')
     opt = parser.parse_args()
     return opt
 
@@ -70,22 +69,24 @@ def parse_arguments():
 if __name__ == '__main__':
     opt = parse_arguments()
     num_epoches = opt.niter
-    batch_size = opt.batchSize
+    batch_size = opt.batchsize
     if opt.experiment == None:
         opt.experiment = './pytorch_models'
     else:
         opt.experiment = os.path.join('./pytorch_models', opt.experiment)
-
+    model_root = os.path.join(opt.experiment, 'TEM')
+    if not os.path.exists(model_root):
+        os.makedirs(model_root)
 
     # experiment_root = './pytorch_models/lr_{}_niter_{}_batchsize_{}_embedsize_{}_hiddensize_{}_stepsize_{}_gamma_{}'\
     #     .format(opt.lr, opt.niter, opt.batchsize, opt.embedsize, opt.hiddensize, opt.stepsize, opt.gamma)
 
     # Intialize model
-    tem = TEM()
+    tem = TEM(embedsize=opt.embedsize, hiddensize=opt.hiddensize)
     tem.cuda()
 
     optimizer = optim.Adam(tem.parameters(), lr = opt.lr, betas=(opt.beta1, 0.999), weight_decay = 0.001)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.stepsize, gamma=opt.gamma)
 
     gt_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/gt_annotations.pkl'
     split_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/split.pkl'
@@ -128,7 +129,7 @@ if __name__ == '__main__':
             # batch_label_action,batch_label_start,batch_label_end,batch_anchor_feature=\
             #     TEM_load_data.getBatchData(batch_video_list[idx],val_data_dict)
 
-            batch_anchor_feature = np.transpose(batch_anchor_feature, (0, 2, 1))
+            # batch_anchor_feature = np.transpose(batch_anchor_feature, (0, 2, 1))
             # batch_size, num_timesteps, feat_dim => batch_size, feat_dim, num_timesteps
 
             X_feature = torch.FloatTensor(batch_anchor_feature).cuda()
@@ -159,7 +160,7 @@ if __name__ == '__main__':
         for idx in range(len(batch_video_list)):
             batch_label_action,batch_label_start,batch_label_end,batch_anchor_feature=\
                 TEM_load_data.getBatchData(batch_video_list[idx],val_data_dict)
-            batch_anchor_feature = np.transpose(batch_anchor_feature, (0, 2, 1))
+            # batch_anchor_feature = np.transpose(batch_anchor_feature, (0, 2, 1))
             X_feature = torch.FloatTensor(batch_anchor_feature).cuda()
             Y_action = torch.FloatTensor(batch_label_action).cuda()
             Y_start = torch.FloatTensor(batch_label_start).cuda()

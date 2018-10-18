@@ -26,7 +26,7 @@ def parse_arguments():
 if __name__ == '__main__':
 
     opt = parse_arguments()
-    batch_size = opt.batchSize
+    batch_size = opt.batchsize
     if opt.experiment == None:
         opt.experiment = './pytorch_models'
         output_root = '../../output'
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     batch_video_list = TEM_load_data.getBatchListTest(video_dict, batch_size, shuffle=False)
 
-    tem = TEM()
+    tem = TEM(embedsize=opt.embedsize, hiddensize=opt.hiddensize)
     model_path = os.path.join(opt.experiment, 'TEM/tem_model_best.pth')
     tem.load_state_dict(torch.load(model_path))
     tem.cuda()
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         print 'Process {}th of {} batch'.format(idx, len(batch_video_list))
         batch_anchor_xmin,batch_anchor_xmax,batch_anchor_feature=\
             TEM_load_data.getProposalDataTest(batch_video_list[idx],feat_dict)
-        batch_anchor_feature = np.transpose(batch_anchor_feature, (0, 2, 1))
+        # batch_anchor_feature = np.transpose(batch_anchor_feature, (0, 2, 1))
         X_feature = torch.FloatTensor(batch_anchor_feature).cuda()
         anchors = tem(X_feature)
         anchors_action = anchors[:, 0, :]

@@ -71,7 +71,8 @@ def parse_arguments():
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate for Critic, default=0.00005')
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
     parser.add_argument('--niter', type=int, default=30, help='number of epochs to train for')
-    parser.add_argument('--batchSize', type=int, default=16, help='input batch size')
+    parser.add_argument('--hiddensize', type=int, default=128, help='the hidden size of network')
+    parser.add_argument('--batchsize', type=int, default=16, help='input batch size')
     parser.add_argument('--experiment', default=None, help='which folder to store samples and models')
     opt = parser.parse_args()
     return opt
@@ -79,7 +80,7 @@ def parse_arguments():
 
 if __name__ == '__main__':
     opt = parse_arguments()
-    batch_size = opt.batchSize
+    batch_size = opt.batchsize
     num_epoches = opt.niter
     if opt.experiment == None:
         opt.experiment = './pytorch_models'
@@ -88,19 +89,22 @@ if __name__ == '__main__':
         experiment_type = opt.experiment
         opt.experiment = os.path.join('./pytorch_models', opt.experiment)
 
+    model_root = os.path.join(opt.experiment, 'PEM')
+    if not os.path.exists(model_root):
+        os.makedirs(model_root)
 
-    pem = PEM()
+    pem = PEM(opt.hiddensize)
     pem.cuda()
 
-    optimizer = optim.Adam(pem.parameters(), lr = 0.001, betas=(opt.beta1, 0.999), weight_decay = 0.0001)
+    optimizer = optim.Adam(pem.parameters(), lr = opt.lr, betas=(opt.beta1, 0.999), weight_decay = 0.0001)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
     gt_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/gt_annotations.pkl'
     split_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/split.pkl'
 
     train_dict, val_dict, test_dict = PEM_load_data.getDatasetDict(gt_path, split_path)
-    train_data = PEM_load_data.getTrainData(train_dict, val_dict, test_dict, batch_size, "train")
-    val_data = PEM_load_data.getTrainData(train_dict, val_dict, test_dict, batch_size, "validation")
+    train_data = PEM_load_data.getTrainData(train_dict, val_dict, test_dict, batch_size, "train", experiment_type)
+    val_data = PEM_load_data.getTrainData(train_dict, val_dict, test_dict, batch_size, "validation", experiment_type)
 
     train_info = {'iou_loss' : [], 'l2' : []}
     val_info = {'iou_loss':[], 'l2':[]}

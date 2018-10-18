@@ -32,6 +32,16 @@ class TEM(nn.Module):
         # self.sigmoid = nn.Sigmoid()
 
     def forward(self, X_feature):
-        conv = self.cnn(X_feature)
-        sigmoid_output = self.sigmoid(0.1 * conv)
+        fc1 = self.linear(X_feature)
+        relu1 = self.relu(fc1)
+        permute_fc = relu1.permute(0, 2, 1)
+
+        tmp_conv0 = self.tmp_conv0(permute_fc)
+        relu1 = self.relu(tmp_conv0)
+        tmp_conv1 = self.tmp_conv1(relu1)
+        relu2 = self.relu(tmp_conv1)
+        tmp_conv2 = self.tmp_conv2(relu2)
+        sigmoid_output = self.sigmoid(0.1 * tmp_conv2)
+        # conv = self.cnn(X_feature)
+        # sigmoid_output = self.sigmoid(0.1 * conv)
         return sigmoid_output

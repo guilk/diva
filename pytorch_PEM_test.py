@@ -72,15 +72,17 @@ def parse_arguments():
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate for Critic, default=0.00005')
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
     parser.add_argument('--niter', type=int, default=20, help='number of epochs to train for')
-    parser.add_argument('--batchSize', type=int, default=16, help='input batch size')
+    parser.add_argument('--batchsize', type=int, default=16, help='input batch size')
     parser.add_argument('--experiment', default=None, help='Where to store samples and models')
+    parser.add_argument('--hiddensize', type=int, default=128, help='the hidden size of network')
+    parser.add_argument('--splittype', default=None, help='split type (train, validation, test)')
     opt = parser.parse_args()
     return opt
 
 
 if __name__ == '__main__':
     opt = parse_arguments()
-    batch_size = opt.batchSize
+    batch_size = opt.batchsize
     num_epoches = opt.niter
     if opt.experiment == None:
         experiment_type = ''
@@ -90,7 +92,7 @@ if __name__ == '__main__':
         opt.experiment = os.path.join('./pytorch_models', opt.experiment)
 
 
-    pem = PEM()
+    pem = PEM(opt.hiddensize)
     model_path = os.path.join(opt.experiment, 'PEM/pem_model_best.pth')
     pem.load_state_dict(torch.load(model_path))
     pem.cuda()
@@ -98,12 +100,25 @@ if __name__ == '__main__':
     gt_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/gt_annotations.pkl'
     split_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/split.pkl'
     train_dict, val_dict, test_dict = PEM_load_data.getDatasetDict(gt_path, split_path)
-    FullDict = PEM_load_data.getTestData(train_dict, val_dict, test_dict, "validation", experiment_type)
-    batch_video_list = PEM_load_data.getBatchList(val_dict, batch_size)
-    video_list = val_dict.keys()
+    FullDict = PEM_load_data.getTestData(train_dict, val_dict, test_dict, opt.splittype, experiment_type)
+    if opt.splittype == 'train':
+        video_list = train_dict.keys()
+        video_dict = train_dict
+    elif opt.splittype == 'validation':
+        video_list = val_dict.keys()
+        video_dict = val_dict
+    elif opt.splittype == 'test':
+        video_list = test_dict.keys()
+        video_dict = test_dict
+
+    # batch_video_list = PEM_load_data.getBatchList(val_dict, batch_size)
+    batch_video_list = PEM_load_data.getBatchList(video_dict, batch_size)
+
+    # video_list = val_dict.keys()
     for idx in range(len(video_list)):
         video_name = video_list[idx]
         prop_dict = FullDict[video_name]
+        # print prop_dict
         batch_feature, batch_iou_list, batch_ioa_list = \
             PEM_load_data.prop_dict_data({"data": prop_dict})
         X_feature = torch.FloatTensor(batch_feature).cuda()
@@ -116,7 +131,10 @@ if __name__ == '__main__':
         xmin_score_list = prop_dict["xmin_score"]
         xmax_score_list = prop_dict["xmax_score"]
         latentDf = pd.DataFrame()
+
         latentDf["xmin"] = xmin_list
+        # print len(xmin_list), len(xmax_list), len(xmin_score_list), len(xmax_score_list)
+        # print iou_score.shape
         latentDf["xmax"] = xmax_list
         latentDf["xmin_score"] = xmin_score_list
         latentDf["xmax_score"] = xmax_score_list

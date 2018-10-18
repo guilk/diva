@@ -114,7 +114,7 @@ def generateFeature(video_name, video_dict, experiment_type):
         tmp_feature = numpy.concatenate([tmp_y_new_action,tmp_y_new_start,tmp_y_new_end])
         feature_bsp.append(tmp_feature)
     feature_bsp = numpy.array(feature_bsp)
-    dst_path = os.path.join('../../output', experiment_type, 'PGM_feature/{}'.format(video_name))
+    dst_path = os.path.join('../../output', experiment_type, 'PGM_features/{}'.format(video_name))
     # numpy.save("../../output/PGM_feature/"+video_name,feature_bsp)
     numpy.save(dst_path,feature_bsp)
 
@@ -124,10 +124,10 @@ def parse_arguments():
     # parser.add_argument('start_idx', type=int)
     # parser.add_argument('end_idx', type=int)
     args = parser.parse_args()
+    return args
 
 if __name__ == '__main__':
     opt = parse_arguments()
-
     gt_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/gt_annotations.pkl'
     split_path = '../../datasets/virat/bsn_dataset/stride_100_interval_300/split.pkl'
 
