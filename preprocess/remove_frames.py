@@ -3,7 +3,7 @@ import os
 
 if __name__ == '__main__':
     gt_root = '../../../datasets/virat/gt_annotations'
-    frames_root = '../../../datasets/virat/frames'
+    frames_root = '../../../datasets/virat/features/rgb_features'
 
     src_video_folders = os.listdir(gt_root)
     # print src_video_folders
@@ -17,6 +17,6 @@ if __name__ == '__main__':
         video_folder_path = os.path.join(frames_root, video_folder)
 
         cmd = 'rm -rf {}'.format(video_folder_path)
-        print cmd
+        # print cmd
         os.system(cmd)
 

@@ -55,7 +55,7 @@ def parse_arguments():
     # parser.add_argument('--cuda', action='store_true', help='enables cuda')
     parser.add_argument('--lr', type=float, default=0.0001, help='learning rate for Critic, default=0.00005')
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
-    parser.add_argument('--niter', type=int, default=20, help='number of epochs to train for')
+    parser.add_argument('--niter', type=int, default=30, help='number of epochs to train for')
     parser.add_argument('--batchsize', type=int, default=8, help='input batch size')
     parser.add_argument('--embedsize', type=int, default=64, help='embedding size of input feature')
     parser.add_argument('--hiddensize', type=int, default=128, help='hidden size of network')

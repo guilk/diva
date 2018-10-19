@@ -19,7 +19,4 @@ if __name__ == '__main__':
             src_result_path = os.path.join(folder_path, img_file)
             dst_result_path = os.path.join(dst_path, '.')
             cmd = 'scp {} {}'.format(src_result_path, dst_result_path)
-
             os.system(cmd)
-        # print src_result_path
-        # print dst_result_path
